@@ -2,19 +2,41 @@ import { useState, useEffect, useCallback } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { sampleScript } from '@/lib/mockData';
-import { Play, Pause, RotateCcw, Mic, MicOff, Volume2, ArrowLeft, Settings } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useScripts } from '@/context/ScriptsContext';
+import { Play, Pause, RotateCcw, Mic, Volume2, ArrowLeft, Settings } from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
 
 type RehearsalStatus = 'idle' | 'listening' | 'countdown' | 'playing' | 'paused' | 'waiting' | 'completed';
 
 export default function RehearsalPage() {
+  const { id } = useParams();
+  const { getScript, scripts } = useScripts();
+  
   const [status, setStatus] = useState<RehearsalStatus>('idle');
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [countdown, setCountdown] = useState(3);
   const [isListening, setIsListening] = useState(false);
   
-  const script = sampleScript;
+  // Get script from context or fall back to first ready script
+  const script = getScript(id || '') || scripts.find(s => s.status === 'ready') || scripts[0];
+  
+  if (!script || script.lines.length === 0) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-24 pb-16">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-2xl font-bold mb-4">No script available</h1>
+            <p className="text-muted-foreground mb-8">Upload a script and assign characters first.</p>
+            <Link to="/scripts">
+              <Button variant="hero">Go to Scripts</Button>
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
+  
   const currentLine = script.lines[currentLineIndex];
   const userCharacter = script.characters.find(c => c.assignedTo === 'user');
   const aiCharacter = script.characters.find(c => c.assignedTo === 'ai');

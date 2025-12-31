@@ -1,7 +1,7 @@
 import { FileText, Clock, Users, ArrowRight, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { mockScripts } from '@/lib/mockData';
+import { useScripts } from '@/context/ScriptsContext';
 import { Link } from 'react-router-dom';
 
 const statusColors = {
@@ -19,11 +19,13 @@ const statusLabels = {
 };
 
 export function ScriptList() {
+  const { scripts, deleteScript } = useScripts();
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-semibold mb-4">All Scripts</h2>
       
-      {mockScripts.length === 0 ? (
+      {scripts.length === 0 ? (
         <Card className="bg-card border-border">
           <CardContent className="p-12 text-center">
             <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
@@ -32,7 +34,7 @@ export function ScriptList() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {mockScripts.map((script) => (
+          {scripts.map((script) => (
             <Card key={script.id} className="bg-card border-border hover:border-primary/30 transition-all duration-300 group">
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
@@ -61,7 +63,12 @@ export function ScriptList() {
                   </span>
 
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="text-muted-foreground hover:text-destructive"
+                      onClick={() => deleteScript(script.id)}
+                    >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                     <Link to={script.status === 'ready' ? `/rehearse/${script.id}` : `/scripts/${script.id}/assign`}>

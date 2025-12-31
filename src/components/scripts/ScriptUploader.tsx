@@ -1,14 +1,18 @@
 import { useState, useCallback } from 'react';
-import { Upload, FileText, Check, AlertCircle } from 'lucide-react';
+import { Upload, FileText, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useScripts } from '@/context/ScriptsContext';
+import { useNavigate } from 'react-router-dom';
 
 export function ScriptUploader() {
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
+  const { addScript } = useScripts();
+  const navigate = useNavigate();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -52,13 +56,25 @@ export function ScriptUploader() {
   const processFile = async (selectedFile: File) => {
     setIsProcessing(true);
     
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    toast({
-      title: "Script uploaded!",
-      description: `${selectedFile.name} is ready for parsing`,
-    });
+    try {
+      const newScript = await addScript(selectedFile);
+      
+      toast({
+        title: "Script uploaded!",
+        description: `${selectedFile.name} has been parsed with ${newScript.characters.length} characters`,
+      });
+      
+      // Navigate to assign characters
+      setTimeout(() => {
+        navigate(`/scripts/${newScript.id}/assign`);
+      }, 500);
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "Could not process the script file",
+        variant: "destructive",
+      });
+    }
     
     setIsProcessing(false);
   };
