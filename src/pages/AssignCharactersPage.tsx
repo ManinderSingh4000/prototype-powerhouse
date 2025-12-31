@@ -1,17 +1,40 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { sampleScript, mockVoices } from '@/lib/mockData';
+import { mockVoices } from '@/lib/mockData';
 import { User, Bot, Volume2, Check, ArrowRight, ArrowLeft } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Character, AIVoice } from '@/types/script';
+import { useScripts } from '@/context/ScriptsContext';
 
 export default function AssignCharactersPage() {
   const navigate = useNavigate();
-  const [characters, setCharacters] = useState<Character[]>(sampleScript.characters);
-  const [selectedVoice, setSelectedVoice] = useState<string | null>(null);
+  const { id } = useParams();
+  const { getScript, updateScript } = useScripts();
+  const script = getScript(id || '');
+  
+  const [characters, setCharacters] = useState<Character[]>([]);
   const [selectingForCharacter, setSelectingForCharacter] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (script) {
+      setCharacters(script.characters);
+    }
+  }, [script]);
+
+  if (!script) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Script not found</h1>
+          <Link to="/scripts">
+            <Button variant="hero">Back to Scripts</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const toggleAssignment = (characterId: string) => {
     setCharacters(prev => prev.map(char => {
@@ -62,7 +85,7 @@ export default function AssignCharactersPage() {
             </div>
 
             <div className="mb-8">
-              <h1 className="font-serif text-4xl font-bold mb-2">{sampleScript.title}</h1>
+              <h1 className="font-serif text-4xl font-bold mb-2">{script.title}</h1>
               <p className="text-muted-foreground text-lg">
                 Assign characters to yourself or the AI scene partner
               </p>
@@ -179,7 +202,10 @@ export default function AssignCharactersPage() {
                 variant="hero" 
                 size="lg"
                 disabled={!canProceed}
-                onClick={() => navigate('/rehearse/sample-1')}
+                onClick={() => {
+                  updateScript(script.id, { characters, status: 'ready' });
+                  navigate(`/rehearse/${script.id}`);
+                }}
               >
                 Start Rehearsal
                 <ArrowRight className="w-5 h-5 ml-2" />
