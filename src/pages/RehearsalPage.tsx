@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -40,11 +40,28 @@ export default function RehearsalPage() {
   }
   
   const currentLine = script.lines[currentLineIndex];
-  const userCharacters = script.characters.filter(c => c.assignedTo === 'user');
-  const aiCharacters = script.characters.filter(c => c.assignedTo === 'ai');
-  
-  const isAILine = (characterName: string) => aiCharacters.some(c => c.name === characterName);
-  const isUserLine = (characterName: string) => userCharacters.some(c => c.name === characterName);
+
+  const characterByName = useMemo(() => {
+    return new Map(script.characters.map(c => [c.name, c] as const));
+  }, [script.characters]);
+
+  const userCharacters = useMemo(
+    () => script.characters.filter(c => c.assignedTo === 'user'),
+    [script.characters]
+  );
+  const aiCharacters = useMemo(
+    () => script.characters.filter(c => c.assignedTo === 'ai'),
+    [script.characters]
+  );
+
+  const isAILine = useCallback(
+    (characterName: string) => characterByName.get(characterName)?.assignedTo === 'ai',
+    [characterByName]
+  );
+  const isUserLine = useCallback(
+    (characterName: string) => characterByName.get(characterName)?.assignedTo === 'user',
+    [characterByName]
+  );
 
   // Simulate "Action" voice detection
   const startListening = useCallback(() => {
@@ -70,26 +87,32 @@ export default function RehearsalPage() {
 
   // Speak AI lines with real TTS
   useEffect(() => {
-    if (status === 'playing' && !hasSpokenRef.current) {
-      const line = script.lines[currentLineIndex];
-      
-      if (isAILine(line?.characterName || '')) {
-        hasSpokenRef.current = true;
-        // Use real TTS for AI lines
-        speak(line.text, () => {
+    if (status !== 'playing' || hasSpokenRef.current) return;
+
+    const line = script.lines[currentLineIndex];
+    if (!line) return;
+
+    const lineCharacter = characterByName.get(line.characterName);
+
+    if (lineCharacter?.assignedTo === 'ai') {
+      hasSpokenRef.current = true;
+
+      speak(line.text, {
+        voiceKey: lineCharacter.voiceId || lineCharacter.id,
+        onEnd: () => {
           hasSpokenRef.current = false;
           if (currentLineIndex < script.lines.length - 1) {
             setCurrentLineIndex(prev => prev + 1);
           } else {
             setStatus('completed');
           }
-        });
-      } else {
-        // User's turn - wait for them
-        setStatus('waiting');
-      }
+        },
+      });
+    } else {
+      // User's turn - wait for them
+      setStatus('waiting');
     }
-  }, [status, currentLineIndex, script.lines, aiCharacters, speak]);
+  }, [status, currentLineIndex, script.lines, characterByName, speak]);
 
   const handleUserLineComplete = () => {
     hasSpokenRef.current = false;
