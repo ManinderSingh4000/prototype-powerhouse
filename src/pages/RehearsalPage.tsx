@@ -40,8 +40,11 @@ export default function RehearsalPage() {
   }
   
   const currentLine = script.lines[currentLineIndex];
-  const userCharacter = script.characters.find(c => c.assignedTo === 'user');
-  const aiCharacter = script.characters.find(c => c.assignedTo === 'ai');
+  const userCharacters = script.characters.filter(c => c.assignedTo === 'user');
+  const aiCharacters = script.characters.filter(c => c.assignedTo === 'ai');
+  
+  const isAILine = (characterName: string) => aiCharacters.some(c => c.name === characterName);
+  const isUserLine = (characterName: string) => userCharacters.some(c => c.name === characterName);
 
   // Simulate "Action" voice detection
   const startListening = useCallback(() => {
@@ -69,9 +72,8 @@ export default function RehearsalPage() {
   useEffect(() => {
     if (status === 'playing' && !hasSpokenRef.current) {
       const line = script.lines[currentLineIndex];
-      const isAILine = line?.characterName === aiCharacter?.name;
       
-      if (isAILine) {
+      if (isAILine(line?.characterName || '')) {
         hasSpokenRef.current = true;
         // Use real TTS for AI lines
         speak(line.text, () => {
@@ -87,7 +89,7 @@ export default function RehearsalPage() {
         setStatus('waiting');
       }
     }
-  }, [status, currentLineIndex, script.lines, aiCharacter, speak]);
+  }, [status, currentLineIndex, script.lines, aiCharacters, speak]);
 
   const handleUserLineComplete = () => {
     hasSpokenRef.current = false;
@@ -136,9 +138,9 @@ export default function RehearsalPage() {
             <div className="text-center mb-8">
               <h1 className="font-serif text-3xl font-bold mb-2">{script.title}</h1>
               <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
-                <span>You: <span className="text-primary font-medium">{userCharacter?.name}</span></span>
+                <span>You: <span className="text-primary font-medium">{userCharacters.map(c => c.name).join(', ') || 'None'}</span></span>
                 <span className="w-1 h-1 rounded-full bg-muted-foreground" />
-                <span>AI: <span className="text-accent-foreground font-medium">{aiCharacter?.name}</span></span>
+                <span>AI: <span className="text-accent-foreground font-medium">{aiCharacters.map(c => c.name).join(', ') || 'None'}</span></span>
               </div>
             </div>
 
@@ -234,7 +236,7 @@ export default function RehearsalPage() {
                       <div className="flex-1 flex items-center justify-center">
                         <div className="text-center max-w-2xl">
                           <span className={`inline-block px-4 py-1 rounded-full text-sm font-medium mb-4 ${
-                            currentLine?.characterName === userCharacter?.name
+                            isUserLine(currentLine?.characterName || '')
                               ? 'bg-primary/10 text-primary'
                               : 'bg-accent/10 text-accent-foreground'
                           }`}>
@@ -297,7 +299,7 @@ export default function RehearsalPage() {
                     {script.lines.slice(currentLineIndex + 1, currentLineIndex + 4).map((line, idx) => (
                       <div key={line.id} className={`flex items-start gap-3 ${idx === 0 ? 'opacity-100' : 'opacity-50'}`}>
                         <span className={`text-xs px-2 py-0.5 rounded ${
-                          line.characterName === userCharacter?.name
+                          isUserLine(line.characterName)
                             ? 'bg-primary/10 text-primary'
                             : 'bg-accent/10 text-accent-foreground'
                         }`}>
