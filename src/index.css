@@ -9,8 +9,8 @@
 
 @layer base {
   :root {
-    /* Light mode - warm cream with cinematic gold accents */
-    --background: 40 20% 96%;
+    /* Light mode - clean white with cinematic gold accents */
+    --background: 0 0% 100%;
     --foreground: 220 20% 15%;
 
     --card: 40 15% 98%;
@@ -71,9 +71,9 @@
   }
 
   .dark {
-    /* Dark mode - deep cinematic blacks with gold accents */
-    --background: 220 25% 6%;
-    --foreground: 40 15% 92%;
+    /* Dark mode - clean white with gold accents */
+    --background: 0 0% 100%;
+    --foreground: 220 20% 15%;
 
     --card: 220 20% 10%;
     --card-foreground: 40 15% 92%;
