@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { Script, Character, DialogueLine } from '@/types/script';
-import { mockScripts, mockVoices } from '@/lib/mockData';
+// Start with empty scripts - user uploads only
 
 interface ScriptsContextType {
   scripts: Script[];
@@ -63,7 +63,7 @@ function parseScriptText(text: string): { characters: Character[]; lines: Dialog
 }
 
 export function ScriptsProvider({ children }: { children: ReactNode }) {
-  const [scripts, setScripts] = useState<Script[]>(mockScripts);
+  const [scripts, setScripts] = useState<Script[]>([]);
 
   const addScript = useCallback(async (file: File): Promise<Script> => {
     const text = await file.text();

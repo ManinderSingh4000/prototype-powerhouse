@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useScripts } from '@/context/ScriptsContext';
+import { useSpeech } from '@/hooks/useSpeech';
 import { Play, Pause, RotateCcw, Mic, Volume2, ArrowLeft, Settings } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 
@@ -11,11 +12,12 @@ type RehearsalStatus = 'idle' | 'listening' | 'countdown' | 'playing' | 'paused'
 export default function RehearsalPage() {
   const { id } = useParams();
   const { getScript, scripts } = useScripts();
+  const { speak, stop, isSpeaking } = useSpeech();
+  const hasSpokenRef = useRef(false);
   
   const [status, setStatus] = useState<RehearsalStatus>('idle');
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [countdown, setCountdown] = useState(3);
-  const [isListening, setIsListening] = useState(false);
   
   // Get script from context or fall back to first ready script
   const script = getScript(id || '') || scripts.find(s => s.status === 'ready') || scripts[0];
@@ -44,13 +46,12 @@ export default function RehearsalPage() {
   // Simulate "Action" voice detection
   const startListening = useCallback(() => {
     setStatus('listening');
-    setIsListening(true);
   }, []);
 
   const simulateActionDetected = useCallback(() => {
-    setIsListening(false);
     setStatus('countdown');
     setCountdown(3);
+    hasSpokenRef.current = false;
   }, []);
 
   // Countdown effect
@@ -64,30 +65,32 @@ export default function RehearsalPage() {
     }
   }, [status, countdown]);
 
-  // Auto-advance lines
+  // Speak AI lines with real TTS
   useEffect(() => {
-    if (status === 'playing') {
+    if (status === 'playing' && !hasSpokenRef.current) {
       const line = script.lines[currentLineIndex];
       const isAILine = line?.characterName === aiCharacter?.name;
       
       if (isAILine) {
-        // Simulate AI reading the line (3 seconds per line)
-        const timer = setTimeout(() => {
+        hasSpokenRef.current = true;
+        // Use real TTS for AI lines
+        speak(line.text, () => {
+          hasSpokenRef.current = false;
           if (currentLineIndex < script.lines.length - 1) {
             setCurrentLineIndex(prev => prev + 1);
           } else {
             setStatus('completed');
           }
-        }, 3000);
-        return () => clearTimeout(timer);
+        });
       } else {
         // User's turn - wait for them
         setStatus('waiting');
       }
     }
-  }, [status, currentLineIndex, script.lines, aiCharacter]);
+  }, [status, currentLineIndex, script.lines, aiCharacter, speak]);
 
   const handleUserLineComplete = () => {
+    hasSpokenRef.current = false;
     if (currentLineIndex < script.lines.length - 1) {
       setCurrentLineIndex(prev => prev + 1);
       setStatus('playing');
@@ -97,6 +100,8 @@ export default function RehearsalPage() {
   };
 
   const reset = () => {
+    stop();
+    hasSpokenRef.current = false;
     setStatus('idle');
     setCurrentLineIndex(0);
     setCountdown(3);
