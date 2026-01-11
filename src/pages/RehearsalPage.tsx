@@ -24,12 +24,12 @@ export default function RehearsalPage() {
   
   if (!script || script.lines.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="font-serif min-h-screen bg-background">
         <Header />
         <main className="pt-24 pb-16">
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-2xl font-bold mb-4">No script available</h1>
-            <p className="text-muted-foreground mb-8">Upload a script and assign characters first.</p>
+            <p className="text-black mb-8">Upload a script and assign characters first.</p>
             <Link to="/scripts">
               <Button variant="hero">Go to Scripts</Button>
             </Link>

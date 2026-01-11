@@ -26,7 +26,7 @@ const features = [
 export function FeaturesSection() {
   return (
     <section className="py-24 relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-accent/5 to-transparent" />
+      <div className="absolute inset-0 bg-white-200 " />
       
       <div className="container mx-auto px-4 relative">
         <div className="text-center mb-16">
@@ -42,7 +42,7 @@ export function FeaturesSection() {
           {features.map((feature, index) => (
             <div
               key={feature.title}
-              className="group relative p-6 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all duration-300 hover:-translate-y-1"
+              className="group relative p-6 rounded-2xl bg-white border border-border hover:border-primary/30 transition-all duration-300 hover:-translate-y-1"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               {/* Gradient background on hover */}

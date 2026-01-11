@@ -7,7 +7,7 @@ export function HeroSection() {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
-      <div className="absolute inset-0">
+      <div className="absolute ">
         <img
           src={heroImage}
           alt="Dramatic stage with spotlight"
@@ -17,20 +17,20 @@ export function HeroSection() {
       </div>
 
       {/* Spotlight Effect */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none">
+      {/* <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none">
         <div className="w-full h-full bg-gradient-radial from-primary/10 via-primary/5 to-transparent rounded-full blur-3xl" />
-      </div>
+      </div> */}
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 pt-24 pb-16">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/50 border border-primary/20 mb-8 animate-fade-in">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-primary/20 mb-8 animate-fade-in">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
             </span>
-            <span className="text-sm text-muted-foreground">AI-Powered Scene Partner</span>
+            <span className="text-sm bg-white-400">AI-Powered Scene Partner</span>
           </div>
 
           {/* Headline */}
@@ -42,7 +42,7 @@ export function HeroSection() {
           </h1>
 
           {/* Subheadline */}
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+          <p className="text-lg text-black-500 md:text-xl  mb-10 animate-slide-up" style={{ animationDelay: '0.1s' }}>
             Your AI scene partner reads lines with professional accents, perfect timing, 
             and realistic delivery. Record self-tapes without needing another person.
           </p>
@@ -56,7 +56,7 @@ export function HeroSection() {
               </Button>
             </Link>
             <Link to="/rehearse">
-              <Button variant="glass" size="xl">
+              <Button variant="glass" size="xl" className='bg-green-600 hover:scale-10 hover:bg-white '>
                 <Play className="w-5 h-5 mr-2" />
                 Try Demo Scene
               </Button>
@@ -64,11 +64,11 @@ export function HeroSection() {
           </div>
 
           {/* Feature Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-3 mt-12 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+          <div className="flex  flex-wrap items-center justify-center gap-3 mt-12 animate-fade-in" style={{ animationDelay: '0.4s' }}>
             {['AI Voice Acting', 'Script Parsing', 'Real-time Rehearsal', 'Pro Recording'].map((feature) => (
               <span
                 key={feature}
-                className="px-4 py-2 rounded-full bg-secondary/50 text-sm text-muted-foreground border border-border"
+                className="px-4 py-2 rounded-full bg-white-900 text-sm  border-4  border-gray "
               >
                 {feature}
               </span>

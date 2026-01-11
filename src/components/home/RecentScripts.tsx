@@ -21,40 +21,40 @@ const statusLabels = {
 
 function ScriptCard({ script }: { script: Script }) {
   return (
-    <Card className="group bg-gradient-card border-border hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
+    <Card className="group bg-white border-border hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-            <FileText className="w-6 h-6 text-primary" />
+            <FileText className="w-6 h-6 text-black" />
           </div>
           <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
             <MoreVertical className="w-4 h-4" />
           </Button>
         </div>
 
-        <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
+        <h3 className="font-serif text-2xl font-bold mb-2 text-black group-hover:text-black transition-colors">
           {script.title}
         </h3>
 
         <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-          <span className="flex items-center gap-1">
-            <Users className="w-4 h-4" />
+          <span className="flex items-center font-serif text-xl gap-3 text-black ">
+            <Users className="w-4 h-4 "  />
             {script.characters.length} characters
           </span>
-          <span className="flex items-center gap-1">
+          <span className="flex items-center font-serif text-xl gap-3 text-black ">
             <Clock className="w-4 h-4" />
             {new Date(script.updatedAt).toLocaleDateString()}
           </span>
         </div>
 
         <div className="flex items-center justify-between">
-          <span className={`text-xs px-3 py-1 rounded-full ${statusColors[script.status]}`}>
+          <span className={`font-serif text-md gap-3 px-3 py-1 rounded-full ${statusColors[script.status]}`}>
             {statusLabels[script.status]}
           </span>
           <Link to={script.status === 'ready' ? `/rehearse/${script.id}` : `/scripts/${script.id}`}>
-            <Button variant="ghost" size="sm" className="text-primary">
+            <Button variant="ghost" size="sm" className="font-serif text-md text-black rounded-full p-5 gap-3 bg-yellow-400 hover:bg-green-600 hover:text-white">
               {script.status === 'ready' ? 'Rehearse' : 'Continue'}
-              <ArrowRight className="w-4 h-4 ml-1" />
+              <ArrowRight className="w-4 h-4 ml-1 " />
             </Button>
           </Link>
         </div>
@@ -69,7 +69,7 @@ export function RecentScripts() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="font-serif text-3xl font-bold mb-2">Your Scripts</h2>
+            <h2 className="font-serif text-3xl font-bold mb-2"></h2>
             <p className="text-muted-foreground">Continue working on your scenes</p>
           </div>
           <Link to="/scripts">
@@ -86,13 +86,13 @@ export function RecentScripts() {
           ))}
 
           {/* Upload New Card */}
-          <Link to="/scripts/new">
+          <Link to="/scripts">
             <Card className="h-full min-h-[200px] border-dashed border-2 border-border hover:border-primary/50 transition-all duration-300 cursor-pointer group">
-              <CardContent className="h-full flex flex-col items-center justify-center p-6">
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4 group-hover:bg-primary/10 transition-colors">
-                  <FileText className="w-8 h-8 text-muted-foreground group-hover:text-primary transition-colors" />
+              <CardContent className="h-full font-serif text-xl gap-3 bg-white flex flex-col items-center justify-center p-6">
+                <div className="w-16 h-16 rounded-full bg-foreground    flex items-center justify-center mb-4  ">
+                  <FileText className="w-8 h-8 text-muted-foreground text-primary transition-colors" />
                 </div>
-                <span className="font-medium text-muted-foreground group-hover:text-foreground transition-colors">
+                <span className="font-medium text-muted-foreground text-black transition-colors">
                   Upload New Script
                 </span>
               </CardContent>

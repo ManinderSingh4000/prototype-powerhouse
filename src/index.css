@@ -10,7 +10,7 @@
 @layer base {
   :root {
     /* Light mode - clean white with cinematic gold accents */
-    --background: 0 0% 100%;
+    --background: 0 0% 0%;
     --foreground: 220 20% 15%;
 
     --card: 40 15% 98%;
@@ -19,10 +19,10 @@
     --popover: 40 15% 98%;
     --popover-foreground: 220 20% 15%;
 
-    --primary: 35 85% 50%;
+    --primary: 0 0% 0%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 15% 92%;
+    --secondary: 0 0% 0%;
     --secondary-foreground: 220 20% 20%;
 
     --muted: 220 10% 92%;
@@ -52,7 +52,7 @@
     --shadow-sm: 0 1px 2px hsl(220 20% 10% / 0.05);
     --shadow-md: 0 4px 12px hsl(220 20% 10% / 0.1);
     --shadow-lg: 0 8px 24px hsl(220 20% 10% / 0.15);
-    --shadow-glow: 0 0 40px hsl(35 85% 50% / 0.3);
+    --shadow-glow: 0 0 40px hsla(0, 0%, 91%, 0.3);
 
     --sidebar-background: 40 15% 98%;
     --sidebar-foreground: 220 20% 25%;

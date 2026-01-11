@@ -28,7 +28,7 @@ export function CTASection() {
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
-            <Button variant="glass" size="xl">
+            <Button variant="glass" className='bg-white hover:bg-white-500 scale-1' size="xl">
               Watch Demo
             </Button>
           </div>

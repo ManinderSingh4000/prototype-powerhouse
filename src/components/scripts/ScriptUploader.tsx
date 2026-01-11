@@ -87,7 +87,7 @@ export function ScriptUploader() {
   };
 
   return (
-    <Card className={`mb-8 transition-all duration-300 ${isDragging ? 'border-primary ring-4 ring-primary/20' : 'border-dashed border-2 border-border hover:border-primary/50'}`}>
+    <Card className={`font-serif mb-8 bg-white text-black transition-all duration-300 ${isDragging ? 'border-primary ring-4 ring-primary/20' : 'border-dashed border-2 border-border hover:border-primary/50'}`}>
       <CardContent className="p-8">
         <div
           onDragOver={handleDragOver}
@@ -116,11 +116,11 @@ export function ScriptUploader() {
             </div>
           ) : (
             <div className="py-8">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
-                <Upload className="w-10 h-10 text-muted-foreground" />
+              <div className="w-20 h-20 mx-auto bg-white mb-6 rounded-full border-2 border-green-500 border-dashed   flex items-center justify-center">
+                <Upload className="w-10 h-10 text-green-500" />
               </div>
               <p className="text-xl font-medium mb-2">Drop your script here</p>
-              <p className="text-muted-foreground mb-6">
+              <p className="text-black mb-6">
                 Supports PDF, TXT, and Fountain formats
               </p>
               <label>

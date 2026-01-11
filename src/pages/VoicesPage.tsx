@@ -23,14 +23,14 @@ export default function VoicesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className=" font-serif min-h-screen bg-white">
       <Header />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="mb-12">
               <h1 className="font-serif text-4xl font-bold mb-4">Voice Library</h1>
-              <p className="text-muted-foreground text-lg">
+              <p className="text-black text-lg">
                 Choose from our collection of professional AI voices for your scene partner
               </p>
             </div>
@@ -43,27 +43,30 @@ export default function VoicesPage() {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {voices.map((voice) => (
-                    <Card key={voice.id} className="bg-card border-border hover:border-primary/30 transition-all duration-300 group">
+                    <Card key={voice.id} className="bg-white border-2 border-dashed border-border hover:border-primary/30 transition-all duration-300 group">
                       <CardContent className="p-5">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4">
-                            <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                            <div className="w-14 h-14 rounded-xl flex items-center justify-center">
                               <Volume2 className="w-6 h-6 text-primary" />
                             </div>
                             <div>
-                              <h3 className="font-semibold text-lg">{voice.name}</h3>
-                              <p className="text-sm text-muted-foreground">
+                              <h3 className="font-semibold text-black text-lg">{voice.name}</h3>
+                              <p className="text-sm text-black">
                                 {voice.accent} • {voice.gender}
                               </p>
                             </div>
                           </div>
                           <Button
-                            variant={playingVoice === voice.id ? 'default' : 'outline'}
+                            variant={playingVoice === voice.id ? 'default' : 'default'}
                             size="icon"
                             onClick={() => playPreview(voice.id)}
-                            className={playingVoice === voice.id ? 'animate-pulse' : ''}
+                            className={playingVoice === voice.id ? 'animate-pulse' : ''
+                              
+                            }
+                            border-2 border-dashed
                           >
-                            <Play className="w-4 h-4" />
+                            <Play className="w-4 h-4 text-black border-2 border-dashed" />
                           </Button>
                         </div>
                       </CardContent>

@@ -15,12 +15,12 @@ export function Header() {
   const location = useLocation();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glass">
+    <header className="fixed font-serif  bg-white top-0 left-0 right-0 z-50 glass">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center">
               <Film className="w-5 h-5 text-primary-foreground" />
             </div>
             <span className="font-serif text-xl font-semibold text-gradient-gold">
@@ -29,11 +29,12 @@ export function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-10">
             {navItems.map((item) => (
               <Link key={item.href} to={item.href}>
-                <Button
-                  variant={location.pathname === item.href ? 'secondary' : 'ghost'}
+                <Button 
+                className='bg-white pl-5  pr-5 rounded-full border-2 border-dashed border-border  transition-all duration-300'
+                  
                   size="sm"
                 >
                   {item.label}
@@ -43,7 +44,7 @@ export function Header() {
           </nav>
 
           {/* CTA Button */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex  items-center gap-3">
             <Button variant="hero" size="sm">
               Get Started
             </Button>
