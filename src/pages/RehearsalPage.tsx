@@ -4,7 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useScripts } from '@/context/ScriptsContext';
 import { useSpeech } from '@/hooks/useSpeech';
-import { Play, Pause, RotateCcw, Mic, Volume2, ArrowLeft, Settings } from 'lucide-react';
+import { useASR, ASRMetrics } from '@/hooks/useASR';
+import { PerformanceMetrics } from '@/components/rehearsal/PerformanceMetrics';
+import { LiveTranscript } from '@/components/rehearsal/LiveTranscript';
+import { Play, Pause, RotateCcw, Mic, Volume2, ArrowLeft, Settings, MicOff, CheckCircle } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 
 type RehearsalStatus = 'idle' | 'listening' | 'countdown' | 'playing' | 'paused' | 'waiting' | 'completed';
@@ -18,40 +21,26 @@ export default function RehearsalPage() {
   const [status, setStatus] = useState<RehearsalStatus>('idle');
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [countdown, setCountdown] = useState(3);
+  const [sessionMetrics, setSessionMetrics] = useState<ASRMetrics[]>([]);
+  const [lastMetrics, setLastMetrics] = useState<ASRMetrics | null>(null);
   
   // Get script from context or fall back to first ready script
   const script = getScript(id || '') || scripts.find(s => s.status === 'ready') || scripts[0];
-  
-  if (!script || script.lines.length === 0) {
-    return (
-      <div className="font-serif min-h-screen bg-background">
-        <Header />
-        <main className="pt-24 pb-16">
-          <div className="container mx-auto px-4 text-center">
-            <h1 className="text-2xl font-bold mb-4">No script available</h1>
-            <p className="text-black mb-8">Upload a script and assign characters first.</p>
-            <Link to="/scripts">
-              <Button variant="hero">Go to Scripts</Button>
-            </Link>
-          </div>
-        </main>
-      </div>
-    );
-  }
-  
-  const currentLine = script.lines[currentLineIndex];
+
+  const currentLine = script?.lines[currentLineIndex];
 
   const characterByName = useMemo(() => {
+    if (!script) return new Map();
     return new Map(script.characters.map(c => [c.name, c] as const));
-  }, [script.characters]);
+  }, [script?.characters]);
 
   const userCharacters = useMemo(
-    () => script.characters.filter(c => c.assignedTo === 'user'),
-    [script.characters]
+    () => script?.characters.filter(c => c.assignedTo === 'user') || [],
+    [script?.characters]
   );
   const aiCharacters = useMemo(
-    () => script.characters.filter(c => c.assignedTo === 'ai'),
-    [script.characters]
+    () => script?.characters.filter(c => c.assignedTo === 'ai') || [],
+    [script?.characters]
   );
 
   const isAILine = useCallback(
@@ -63,8 +52,25 @@ export default function RehearsalPage() {
     [characterByName]
   );
 
+  // ASR hook for listening to user lines
+  const {
+    isListening,
+    isConnecting,
+    partialTranscript,
+    startListening: startASR,
+    stopListening: stopASR,
+    error: asrError,
+  } = useASR({
+    onFinalTranscript: (transcript, metrics) => {
+      console.log('ASR Final:', transcript, metrics);
+    },
+    onError: (error) => {
+      console.error('ASR Error:', error);
+    },
+  });
+
   // Simulate "Action" voice detection
-  const startListening = useCallback(() => {
+  const startListeningForAction = useCallback(() => {
     setStatus('listening');
   }, []);
 
@@ -72,6 +78,8 @@ export default function RehearsalPage() {
     setStatus('countdown');
     setCountdown(3);
     hasSpokenRef.current = false;
+    setSessionMetrics([]);
+    setLastMetrics(null);
   }, []);
 
   // Countdown effect
@@ -85,9 +93,9 @@ export default function RehearsalPage() {
     }
   }, [status, countdown]);
 
-  // Speak AI lines with real TTS
+  // Handle line progression and ASR for user turns
   useEffect(() => {
-    if (status !== 'playing' || hasSpokenRef.current) return;
+    if (!script || status !== 'playing' || hasSpokenRef.current) return;
 
     const line = script.lines[currentLineIndex];
     if (!line) return;
@@ -95,6 +103,7 @@ export default function RehearsalPage() {
     const lineCharacter = characterByName.get(line.characterName);
 
     if (lineCharacter?.assignedTo === 'ai') {
+      // AI's turn - speak the line
       hasSpokenRef.current = true;
 
       speak(line.text, {
@@ -109,36 +118,67 @@ export default function RehearsalPage() {
         },
       });
     } else {
-      // User's turn - wait for them
+      // User's turn - start ASR and wait
       setStatus('waiting');
+      hasSpokenRef.current = true;
+      startASR(line.text);
     }
-  }, [status, currentLineIndex, script.lines, characterByName, speak]);
+  }, [status, currentLineIndex, script?.lines, characterByName, speak, startASR]);
 
-  const handleUserLineComplete = () => {
+  const handleUserLineComplete = useCallback(() => {
+    // Stop ASR and get metrics
+    const metrics = stopASR();
+    
+    if (metrics) {
+      setLastMetrics(metrics);
+      setSessionMetrics(prev => [...prev, metrics]);
+    }
+
     hasSpokenRef.current = false;
-    if (currentLineIndex < script.lines.length - 1) {
+    
+    if (script && currentLineIndex < script.lines.length - 1) {
       setCurrentLineIndex(prev => prev + 1);
       setStatus('playing');
     } else {
       setStatus('completed');
     }
-  };
+  }, [stopASR, script, currentLineIndex]);
 
-  const reset = () => {
+  const reset = useCallback(() => {
     stop();
+    stopASR();
     hasSpokenRef.current = false;
     setStatus('idle');
     setCurrentLineIndex(0);
     setCountdown(3);
-  };
+    setSessionMetrics([]);
+    setLastMetrics(null);
+  }, [stop, stopASR]);
 
-  const togglePause = () => {
+  const togglePause = useCallback(() => {
     if (status === 'playing') {
       setStatus('paused');
     } else if (status === 'paused') {
       setStatus('playing');
     }
-  };
+  }, [status]);
+
+  if (!script || script.lines.length === 0) {
+    return (
+      <div className="font-serif min-h-screen bg-background">
+        <Header />
+        <main className="pt-24 pb-16">
+          <div className="container mx-auto px-4 text-center">
+            <h1 className="text-2xl font-bold mb-4">No script available</h1>
+            <p className="text-muted-foreground mb-8">Upload a script and assign characters first.</p>
+            <Link to="/scripts">
+              <Button variant="hero">Go to Scripts</Button>
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -167,22 +207,42 @@ export default function RehearsalPage() {
               </div>
             </div>
 
+            {/* Performance Metrics - Show during and after rehearsal */}
+            {(sessionMetrics.length > 0 || status === 'completed') && (
+              <PerformanceMetrics 
+                metrics={lastMetrics} 
+                sessionMetrics={sessionMetrics}
+                className="mb-6"
+              />
+            )}
+
             {/* Main Rehearsal Area */}
             <Card className="mb-8 overflow-hidden">
               <CardContent className="p-0">
                 {/* Status Bar */}
                 <div className={`px-6 py-3 flex items-center justify-between ${
-                  status === 'playing' || status === 'waiting' ? 'bg-green-500/10 border-b border-green-500/20' :
+                  status === 'playing' ? 'bg-green-500/10 border-b border-green-500/20' :
+                  status === 'waiting' ? 'bg-primary/10 border-b border-primary/20' :
                   status === 'listening' ? 'bg-primary/10 border-b border-primary/20' :
                   status === 'countdown' ? 'bg-accent/10 border-b border-accent/20' :
                   'bg-muted border-b border-border'
                 }`}>
-                  <span className="text-sm font-medium">
+                  <span className="text-sm font-medium flex items-center gap-2">
                     {status === 'idle' && 'Ready to begin'}
                     {status === 'listening' && 'Listening for "Action!"...'}
                     {status === 'countdown' && `Starting in ${countdown}...`}
-                    {status === 'playing' && 'Scene in progress'}
-                    {status === 'waiting' && 'Your line'}
+                    {status === 'playing' && (
+                      <>
+                        <Volume2 className="w-4 h-4" />
+                        AI Speaking
+                      </>
+                    )}
+                    {status === 'waiting' && (
+                      <>
+                        <Mic className="w-4 h-4 animate-pulse" />
+                        Your turn - Speak your line
+                      </>
+                    )}
                     {status === 'paused' && 'Paused'}
                     {status === 'completed' && 'Scene complete!'}
                   </span>
@@ -199,11 +259,14 @@ export default function RehearsalPage() {
                         <Mic className="w-12 h-12 text-primary" />
                       </div>
                       <h2 className="text-2xl font-semibold mb-2">Ready to Rehearse</h2>
-                      <p className="text-muted-foreground mb-8 max-w-md">
+                      <p className="text-muted-foreground mb-4 max-w-md">
+                        Your lines will be listened to and scored for accuracy. The AI will wait for you to finish speaking.
+                      </p>
+                      <p className="text-sm text-muted-foreground mb-8 max-w-md">
                         Click "Start" and say "Action!" when you're ready, or use the button below to begin immediately.
                       </p>
                       <div className="flex items-center gap-4">
-                        <Button variant="hero" size="xl" onClick={startListening}>
+                        <Button variant="hero" size="xl" onClick={startListeningForAction}>
                           <Mic className="w-5 h-5 mr-2" />
                           Start Listening
                         </Button>
@@ -237,10 +300,10 @@ export default function RehearsalPage() {
                   ) : status === 'completed' ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center">
                       <div className="w-24 h-24 rounded-full bg-green-500/10 flex items-center justify-center mb-6">
-                        <Volume2 className="w-12 h-12 text-green-500" />
+                        <CheckCircle className="w-12 h-12 text-green-500" />
                       </div>
                       <h2 className="text-3xl font-serif font-bold mb-2">Scene Complete!</h2>
-                      <p className="text-muted-foreground mb-8">Great rehearsal! Ready to go again?</p>
+                      <p className="text-muted-foreground mb-8">Great rehearsal! Check your performance metrics above.</p>
                       <div className="flex items-center gap-4">
                         <Button variant="hero" size="lg" onClick={reset}>
                           <RotateCcw className="w-5 h-5 mr-2" />
@@ -271,13 +334,40 @@ export default function RehearsalPage() {
                         </div>
                       </div>
 
-                      {/* User Action for their lines */}
+                      {/* Live Transcript for user's turn */}
                       {status === 'waiting' && (
-                        <div className="pt-6 border-t border-border flex justify-center">
-                          <Button variant="hero" size="lg" onClick={handleUserLineComplete}>
-                            <Mic className="w-5 h-5 mr-2" />
-                            I've Said My Line
-                          </Button>
+                        <div className="mt-6">
+                          <LiveTranscript
+                            isListening={isListening}
+                            isConnecting={isConnecting}
+                            expectedText={currentLine?.text || ''}
+                            partialTranscript={partialTranscript}
+                          />
+                          
+                          {asrError && (
+                            <p className="text-sm text-destructive mt-2 text-center">{asrError}</p>
+                          )}
+
+                          <div className="pt-6 flex justify-center gap-4">
+                            <Button 
+                              variant="hero" 
+                              size="lg" 
+                              onClick={handleUserLineComplete}
+                              className="min-w-[200px]"
+                            >
+                              {isListening ? (
+                                <>
+                                  <MicOff className="w-5 h-5 mr-2" />
+                                  Done Speaking
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle className="w-5 h-5 mr-2" />
+                                  Continue
+                                </>
+                              )}
+                            </Button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -297,6 +387,7 @@ export default function RehearsalPage() {
                   size="lg" 
                   className="w-40"
                   onClick={togglePause}
+                  disabled={status === 'waiting'}
                 >
                   {status === 'paused' ? (
                     <>
