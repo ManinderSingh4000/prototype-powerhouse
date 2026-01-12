@@ -3,11 +3,11 @@ import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useScripts } from '@/context/ScriptsContext';
-import { useSpeech } from '@/hooks/useSpeech';
+import { useElevenLabsTTS } from '@/hooks/useElevenLabsTTS';
 import { useASR, ASRMetrics } from '@/hooks/useASR';
 import { PerformanceMetrics } from '@/components/rehearsal/PerformanceMetrics';
 import { LiveTranscript } from '@/components/rehearsal/LiveTranscript';
-import { Play, Pause, RotateCcw, Mic, Volume2, ArrowLeft, Settings, MicOff, CheckCircle } from 'lucide-react';
+import { Play, Pause, RotateCcw, Mic, Volume2, ArrowLeft, Settings, MicOff, CheckCircle, Loader2 } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 
 type RehearsalStatus = 'idle' | 'listening' | 'countdown' | 'playing' | 'paused' | 'waiting' | 'completed';
@@ -15,7 +15,7 @@ type RehearsalStatus = 'idle' | 'listening' | 'countdown' | 'playing' | 'paused'
 export default function RehearsalPage() {
   const { id } = useParams();
   const { getScript, scripts } = useScripts();
-  const { speak, stop, isSpeaking } = useSpeech();
+  const { speak, stop, isSpeaking, isLoading: ttsLoading, error: ttsError } = useElevenLabsTTS();
   const hasSpokenRef = useRef(false);
   
   const [status, setStatus] = useState<RehearsalStatus>('idle');
@@ -103,19 +103,17 @@ export default function RehearsalPage() {
     const lineCharacter = characterByName.get(line.characterName);
 
     if (lineCharacter?.assignedTo === 'ai') {
-      // AI's turn - speak the line
+      // AI's turn - speak the line using ElevenLabs TTS
       hasSpokenRef.current = true;
 
-      speak(line.text, {
-        voiceKey: lineCharacter.voiceId || lineCharacter.id,
-        onEnd: () => {
-          hasSpokenRef.current = false;
-          if (currentLineIndex < script.lines.length - 1) {
-            setCurrentLineIndex(prev => prev + 1);
-          } else {
-            setStatus('completed');
-          }
-        },
+      speak(line.text, lineCharacter.voiceId || lineCharacter.id, () => {
+        // Called when TTS finishes
+        hasSpokenRef.current = false;
+        if (currentLineIndex < script.lines.length - 1) {
+          setCurrentLineIndex(prev => prev + 1);
+        } else {
+          setStatus('completed');
+        }
       });
     } else {
       // User's turn - start ASR and wait
@@ -123,7 +121,7 @@ export default function RehearsalPage() {
       hasSpokenRef.current = true;
       startASR(line.text);
     }
-  }, [status, currentLineIndex, script?.lines, characterByName, speak, startASR]);
+  }, [status, currentLineIndex, script, characterByName, speak, startASR]);
 
   const handleUserLineComplete = useCallback(() => {
     // Stop ASR and get metrics
